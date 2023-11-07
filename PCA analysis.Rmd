@@ -1,0 +1,741 @@
+---
+title: "PCA Plot_Mouse data"
+output:
+  pdf_document: default
+  html_document: default
+date: '2023-10-24'
+---
+
+#resource: https://www.youtube.com/watch?v=mNpBrHwOCt4
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r}
+install.packages("MASS")
+install.packages("factoextra")
+install.packages("ggplot2")
+```
+
+
+```{r cars}
+# Load Libraries 
+library(MASS) 
+library(factoextra)
+library(ggplot2)
+
+```
+
+```{r}
+#load file
+PCA_data <- read.csv("~/Documents/BBSP/Fall 2023/michelle paper /Data analysis/PCA_data.csv")
+
+dim(PCA_data)
+```
+
+```{r}
+# Structure of Data 
+str(PCA_data)
+summary(PCA_data)
+
+```
+
+
+```{r}
+# Delete Cases with Missingness (remove missing va)
+PCA_data1 <- na.omit(PCA_data)
+summary(PCA_data1)
+```
+
+```{r}
+# Exclude Categorical Data
+PCA_data2 <- PCA_data1[,-c(1:7)]
+PCA_data2
+```
+
+```{r}
+# Run PCA
+cyto_vent_echo_pca <- prcomp(PCA_data2, 
+                     scale = TRUE)
+# Summary of Analysis 
+summary(cyto_vent_echo_pca)
+
+# Elements of PCA object 
+names(cyto_vent_echo_pca)
+
+# Std Dev of Components 
+cyto_vent_echo_pca$sdev
+
+# Eigenvectors - contains the loadings per componeent
+cyto_vent_echo_pca$rotation
+
+# Std Dev and Mean of Variables  - stdev od the originial variables 
+cyto_vent_echo_pca$center
+cyto_vent_echo_pca$scale
+
+# Principal Component Scores - 
+cyto_vent_echo_pca$x
+
+```
+
+
+```{r}
+#visualizing PCA plot 
+
+# Scree Plot of Variance 
+fviz_eig(cyto_vent_echo_pca, 
+         addlabels = TRUE,
+         ylim = c(0, 20))
+
+#gives percentages for all 10 components 
+#first 5 comoponents capture ~50% of the data 
+```
+
+
+```{r}
+# Biplot with Default Settings
+fviz_pca_biplot(cyto_vent_echo_pca)
+
+#shows how the data points and eigenvector are lebeled by default
+```
+
+
+```{r}
+# Biplot with Labeled Variables
+fviz_pca_biplot(cyto_vent_echo_pca,
+                label="var")
+
+fviz_cos2(cyto_vent_echo_pca, choice = "var", axes = 1:3) ##  determine how much each variable is represented in a given component. A low value means that the variable is not perfectly represented by that component. A high value, on the other hand, means a good representation of the variable on that component.
+
+fviz_pca_var(cyto_vent_echo_pca, col.var = "cos2",
+            gradient.cols = c("black", "orange", "red"),
+            repel = TRUE)
+#suppresses the labels of the data points - to reduce crowding of the graph 
+```
+
+
+```{r}
+### Biplot with Colored Groups
+fviz_pca_ind(cyto_vent_echo_pca,
+                label="var",
+                habillage = PCA_data1$Housing, addEllipses=TRUE, ellipse.level=0.95, title = "Housing" )
+
+fviz_pca_ind(cyto_vent_echo_pca,
+                label="var",
+                habillage = PCA_data1$Exposure, addEllipses=TRUE, ellipse.level=0.95, title = "Exposure" )
+
+fviz_pca_ind(cyto_vent_echo_pca,
+                label="var",
+                habillage = PCA_data1$Sex, addEllipses=TRUE, ellipse.level=0.95, title = "Sex" )
+
+AL_reorder <-  factor(PCA_data1$AL_score_rank, levels = c("zero","low","med", "high"))
+
+fviz_pca_ind(cyto_vent_echo_pca,
+                label="var",
+                habillage = AL_reorder, addEllipses=TRUE, ellipse.level=0.95,title = "All endpoints - AL Score" )
+
+fviz_pca_ind(cyto_vent_echo_pca,
+                label="var",
+                habillage = PCA_data1$Group, addEllipses=TRUE, ellipse.level=0.95, title = "All endpoints PCA - Groups" )
+
+
+
+##colors the data points by class or grouping variable 
+```
+
+```{r}
+## PCA plot separated by type of endpoints - cytokines 
+cytokines <- PCA_data1[,8:14]
+
+cytokines_pca <- prcomp(cytokines, 
+                     scale = TRUE)
+# Summary of Analysis 
+summary(cytokines_pca)
+
+# Elements of PCA object 
+names(cytokines_pca)
+
+# Std Dev of Components 
+cytokines_pca$sdev
+
+# Eigenvectors - contains the loadings per componeent
+cytokines_pca$rotation
+
+# Std Dev and Mean of Variables  - stdev od the originial variables 
+cytokines_pca$center
+cytokines_pca$scale
+
+# Principal Component Scores - 
+cytokines_pca$x
+
+# Scree Plot of Variance 
+fviz_eig(cytokines_pca, 
+         addlabels = TRUE,
+         ylim = c(0, 30))
+
+fviz_pca_biplot(cytokines_pca)
+
+# Biplot with Labeled Variables
+fviz_pca_biplot(cytokines_pca,
+                label="var")
+
+fviz_cos2(cytokines_pca, choice = "var", axes = 1:2) ##  determine how much each variable is represented in a given component. A low value means that the variable is not perfectly represented by that component. A high value, on the other hand, means a good representation of the variable on that component.
+
+fviz_pca_var(cytokines_pca, col.var = "cos2",
+            gradient.cols = c("black", "orange", "red"),
+            repel = TRUE)
+#suppresses the labels of the data points - to reduce crowding of the graph 
+
+
+### PCA Biplot outputs 
+AL_reorder <-  factor(PCA_data1$AL_score_rank, levels = c("zero","low","med", "high"))
+
+PCA_output_cytokoine_AL <- fviz_pca_biplot(cytokines_pca,
+                label="var",
+                habillage = AL_reorder, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "Cytokine PCA - AL Load"
+                )
+
+PCA_output_cytokoine_housing <- fviz_pca_biplot(cytokines_pca,
+                label="var",
+                habillage = PCA_data1$Housing, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "Cytokine PCA - Housing"
+                )
+
+PCA_output_cytokoine_exposure <- fviz_pca_biplot(cytokines_pca,
+                label="var",
+                habillage = PCA_data1$Exposure, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "Cytokine PCA - Exposure"
+                )
+
+PCA_output_cytokoine_sex <- fviz_pca_biplot(cytokines_pca,
+                label="var",
+                habillage = PCA_data1$Sex, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "Cytokine PCA - Sex"
+                )
+PCA_output_cytokoine_groups <- fviz_pca_biplot(cytokines_pca,
+                label="var",
+                habillage = PCA_data1$Group,
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "Cytokine PCA - Groups"
+                )
+
+
+
+#finaal graphs
+PCA_output_cytokoine_AL
+PCA_output_cytokoine_housing
+PCA_output_cytokoine_exposure
+PCA_output_cytokoine_sex
+PCA_output_cytokoine_groups
+
+```
+
+
+```{r}
+## PCA plot separated by type of endpoints - AL biomarkers 
+AL_biomarkers <- PCA_data1[,15:19]
+
+
+AL_pca <- prcomp(AL_biomarkers, 
+                     scale = TRUE)
+# Summary of Analysis 
+summary(AL_pca)
+
+# Elements of PCA object 
+names(AL_pca)
+
+# Std Dev of Components 
+AL_pca$sdev
+
+# Eigenvectors - contains the loadings per componeent
+AL_pca$rotation
+
+# Std Dev and Mean of Variables  - stdev od the originial variables 
+AL_pca$center
+AL_pca$scale
+
+# Principal Component Scores - 
+AL_pca$x
+
+# Scree Plot of Variance 
+fviz_eig(AL_pca, 
+         addlabels = TRUE,
+         ylim = c(0, 30))
+
+fviz_pca_biplot(AL_pca)
+
+# Biplot with Labeled Variables
+fviz_pca_biplot(AL_pca,
+                label="var")
+
+fviz_cos2(AL_pca, choice = "var", axes = 1:2) ##  determine how much each variable is represented in a given component. A low value means that the variable is not perfectly represented by that component. A high value, on the other hand, means a good representation of the variable on that component.
+
+fviz_pca_var(AL_pca, col.var = "cos2",
+            gradient.cols = c("black", "orange", "red"),
+            repel = TRUE)
+#suppresses the labels of the data points - to reduce crowding of the graph 
+
+
+### PCA Biplot outputs 
+AL_reorder <-  factor(PCA_data1$AL_score_rank, levels = c("zero","low","med", "high"))
+
+PCA_output_ALbiomarkers_AL <- fviz_pca_biplot(AL_pca,
+                label="var",
+                habillage = AL_reorder, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "AL Biomarkers PCA - AL Load"
+                )
+
+PCA_output_ALbiomarkers_housing <- fviz_pca_biplot(AL_pca,
+                label="var",
+                habillage = PCA_data1$Housing, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "AL Biomarkers PCA - Housing"
+                )
+
+PCA_output_ALbiomarkers_exposure <- fviz_pca_biplot(AL_pca,
+                label="var",
+                habillage = PCA_data1$Exposure, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "AL Biomarkers PCA - Exposure"
+                )
+
+PCA_output_ALbiomarkers_sex <- fviz_pca_biplot(AL_pca,
+                label="var",
+                habillage = PCA_data1$Sex, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "AL Biomarkers PCA - Sex"
+                )
+PCA_output_ALbiomarkers_groups <- fviz_pca_biplot(AL_pca,
+                label="var",
+                habillage = PCA_data1$Group, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "AL Biomarkers PCA - Groups"
+                )
+#finaal graphs
+PCA_output_ALbiomarkers_AL
+PCA_output_ALbiomarkers_housing
+PCA_output_ALbiomarkers_exposure
+PCA_output_ALbiomarkers_sex
+PCA_output_ALbiomarkers_groups
+
+```
+
+```{r}
+## PCA plot separated by type of endpoints - echo
+echo <- PCA_data1[,20:25]
+
+echo_pca <- prcomp(echo, 
+                     scale = TRUE)
+# Summary of Analysis 
+summary(echo_pca)
+
+# Elements of PCA object 
+names(echo_pca)
+
+# Std Dev of Components 
+echo_pca$sdev
+
+# Eigenvectors - contains the loadings per componeent
+echo_pca$rotation
+
+# Std Dev and Mean of Variables  - stdev od the originial variables 
+echo_pca$center
+echo_pca$scale
+
+# Principal Component Scores - 
+echo_pca$x
+
+# Scree Plot of Variance 
+fviz_eig(echo_pca, 
+         addlabels = TRUE,
+         ylim = c(0, 40))
+
+fviz_pca_biplot(echo_pca)
+
+# Biplot with Labeled Variables
+fviz_pca_biplot(echo_pca,
+                label="var")
+
+fviz_cos2(echo_pca, choice = "var", axes = 1:2) ##  determine how much each variable is represented in a given component. A low value means that the variable is not perfectly represented by that component. A high value, on the other hand, means a good representation of the variable on that component.
+
+fviz_pca_var(echo_pca, col.var = "cos2",
+            gradient.cols = c("black", "orange", "red"),
+            repel = TRUE)
+#suppresses the labels of the data points - to reduce crowding of the graph 
+
+
+### PCA Biplot outputs 
+AL_reorder <-  factor(PCA_data1$AL_score_rank, levels = c("zero","low","med", "high"))
+
+PCA_output_echo_AL <- fviz_pca_biplot(echo_pca,
+                label="var",
+                habillage = AL_reorder, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "HF Echo PCA - AL Load"
+                )
+
+PCA_output_echo_housing <- fviz_pca_biplot(echo_pca,
+                label="var",
+                habillage = PCA_data1$Housing, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "HF Echo PCA - Housing"
+                )
+
+PCA_output_echo_exposure <- fviz_pca_biplot(echo_pca,
+                label="var",
+                habillage = PCA_data1$Exposure, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "HF Echo PCA - Exposure"
+                )
+
+PCA_output_echo_sex <- fviz_pca_biplot(echo_pca,
+                label="var",
+                habillage = PCA_data1$Sex, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "HF Echo PCA - Sex"
+                )
+
+PCA_output_echo_groups <- fviz_pca_biplot(echo_pca,
+                label="var",
+                habillage = PCA_data1$Group, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.90, title = "HF Echo PCA - Groups"
+                )
+
+
+#finaal graphs
+PCA_output_echo_AL
+PCA_output_echo_housing
+PCA_output_echo_exposure
+PCA_output_echo_sex
+PCA_output_echo_groups
+```
+
+```{r}
+##setting up DH FA 
+
+DH_FA <- read.csv("~/Documents/BBSP/Fall 2023/michelle paper /Data analysis/DH_FA.csv")
+
+dim(DH_FA)
+
+# Delete Cases with Missingness (remove missing va)
+DH_FA1 <- na.omit(DH_FA)
+summary(DH_FA1)
+
+#Exclude categorical data
+DH_FA2 <- DH_FA1[,-c(1:7)]
+                           
+```
+
+```{r}
+## DH FA PCA
+DH_FA_pca <- prcomp(DH_FA2, 
+                     scale = TRUE)
+# Summary of Analysis 
+summary(DH_FA_pca)
+
+# Elements of PCA object 
+names(DH_FA_pca)
+
+# Std Dev of Components 
+DH_FA_pca$sdev
+
+# Eigenvectors - contains the loadings per componeent
+DH_FA_pca$rotation
+
+# Std Dev and Mean of Variables  - stdev od the originial variables 
+DH_FA_pca$center
+DH_FA_pca$scale
+
+# Principal Component Scores - 
+DH_FA_pca$x
+
+# Scree Plot of Variance 
+fviz_eig(DH_FA_pca, 
+         addlabels = TRUE,
+         ylim = c(0, 40))
+
+fviz_pca_biplot(DH_FA_pca)
+
+# Biplot with Labeled Variables
+fviz_pca_biplot(DH_FA_pca,
+                label="var")
+
+fviz_cos2(DH_FA_pca, choice = "var", axes = 1:2) ##  determine how much each variable is represented in a given component. A low value means that the variable is not perfectly represented by that component. A high value, on the other hand, means a good representation of the variable on that component.
+
+fviz_pca_var(DH_FA_pca, col.var = "cos2",
+            gradient.cols = c("black", "orange", "red"),
+            repel = TRUE)
+#suppresses the labels of the data points - to reduce crowding of the graph 
+
+
+### PCA Biplot outputs 
+##re-ordered the AL factors to get a consistent biplot legend for the AL graphs showing colors for all 4 groups 
+AL_reorder_DHFA <-  factor(DH_FA1$AL_score_rank, levels = c("zero","low","med", "high"))
+ 
+PCA_output_DHFA_AL <- fviz_pca_biplot(DH_FA_pca,
+                label="var",
+                habillage = AL_reorder_DHFA, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "DH FA PCA - AL Load"
+                )
+
+PCA_output_DHFA_sex <- fviz_pca_biplot(DH_FA_pca,
+                label="var",
+                habillage = DH_FA1$Sex, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "DH FA PCA - Sex"
+                )
+
+#finaal graphs
+PCA_output_DHFA_AL
+PCA_output_DHFA_sex
+
+```
+
+
+
+```{r}
+#DH WS PCA 
+
+DH_WS <- read.csv("~/Documents/BBSP/Fall 2023/michelle paper /Data analysis/DH_WS.csv")
+
+dim(DH_WS)
+
+# Delete Cases with Missingness (remove missing va)
+DH_WS1 <- na.omit(DH_WS)
+summary(DH_WS1)
+
+#Exclude categorical data
+DH_WS2 <- DH_WS1[,-c(1:7)]
+
+DH_WS_pca <- prcomp(DH_WS2, 
+                     scale = TRUE)
+# Summary of Analysis 
+summary(DH_WS_pca)
+
+# Elements of PCA object 
+names(DH_WS_pca)
+
+# Std Dev of Components 
+DH_WS_pca$sdev
+
+# Eigenvectors - contains the loadings per componeent
+DH_WS_pca$rotation
+
+# Std Dev and Mean of Variables  - stdev od the originial variables 
+DH_WS_pca$center
+DH_WS_pca$scale
+
+# Principal Component Scores - 
+DH_WS_pca$x
+
+# Scree Plot of Variance 
+fviz_eig(DH_WS_pca, 
+         addlabels = TRUE,
+         ylim = c(0, 40))
+
+fviz_pca_biplot(DH_WS_pca)
+
+# Biplot with Labeled Variables
+fviz_pca_biplot(DH_WS_pca,
+                label="var")
+
+fviz_cos2(DH_WS_pca, choice = "var", axes = 1:2) ##  determine how much each variable is represented in a given component. A low value means that the variable is not perfectly represented by that component. A high value, on the other hand, means a good representation of the variable on that component.
+
+fviz_pca_var(DH_WS_pca, col.var = "cos2",
+            gradient.cols = c("black", "orange", "red"),
+            repel = TRUE)
+#suppresses the labels of the data points - to reduce crowding of the graph 
+
+
+### PCA Biplot outputs #
+AL_reorder_DHWS <-  factor(DH_WS1$AL_score_rank, levels = c("zero","low","med", "high"))
+
+PCA_output_DHWS_AL <- fviz_pca_biplot(DH_WS_pca,
+                label="var",
+                habillage = AL_reorder_DHWS, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "DH WS PCA - AL Load"
+                )
+
+PCA_output_DHWS_sex <- fviz_pca_biplot(DH_WS_pca,
+                label="var",
+                habillage = DH_WS1$Sex, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "DH WS PCA - Sex"
+                )
+
+#finaal graphs
+PCA_output_DHWS_AL
+PCA_output_DHWS_sex
+```
+
+```{r}
+#EH FA
+EH_FA <- read.csv("~/Documents/BBSP/Fall 2023/michelle paper /Data analysis/EH_FA.csv")
+EH_FA1 <- EH_FA[,-c(37)] #to remove random column that had all NA values - can go back and change .csv file later 
+dim(EH_FA1)
+
+# Delete Cases with Missingness (remove missing va)
+EH_FA2 <- na.omit(EH_FA1)
+summary(EH_FA2)
+
+#Exclude categorical data
+EH_FA3 <- EH_FA2[,-c(1:7)]
+
+EH_FA_pca <- prcomp(EH_FA3, 
+                     scale = TRUE)
+# Summary of Analysis 
+summary(EH_FA_pca)
+
+# Elements of PCA object 
+names(EH_FA_pca)
+
+# Std Dev of Components 
+EH_FA_pca$sdev
+
+# Eigenvectors - contains the loadings per componeent
+EH_FA_pca$rotation
+
+# Std Dev and Mean of Variables  - stdev od the originial variables 
+EH_FA_pca$center
+EH_FA_pca$scale
+
+# Principal Component Scores - 
+EH_FA_pca$x
+
+# Scree Plot of Variance 
+fviz_eig(EH_FA_pca, 
+         addlabels = TRUE,
+         ylim = c(0, 40))
+
+fviz_pca_biplot(EH_FA_pca)
+
+# Biplot with Labeled Variables
+fviz_pca_biplot(EH_FA_pca,
+                label="var")
+
+fviz_cos2(EH_FA_pca, choice = "var", axes = 1:2) ##  determine how much each variable is represented in a given component. A low value means that the variable is not perfectly represented by that component. A high value, on the other hand, means a good representation of the variable on that component.
+
+fviz_pca_var(EH_FA_pca, col.var = "cos2",
+            gradient.cols = c("black", "orange", "red"),
+            repel = TRUE)
+#suppresses the labels of the data points - to reduce crowding of the graph 
+
+
+### PCA Biplot outputs 
+
+AL_reorder_EHFA <-  factor(EH_FA2$AL_score_rank, levels = c("zero","med", "high"))
+
+##Need to figure out how to get med to be blue not green ###
+
+
+
+PCA_output_EHFA_AL <- fviz_pca_biplot(EH_FA_pca,
+                label="var",
+                habillage = AL_reorder_EHFA, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "EH FA PCA - AL Load"
+                )
+
+PCA_output_EHFA_sex <- fviz_pca_biplot(EH_FA_pca,
+                label="var",
+                habillage = EH_FA2$Sex, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.95, title = "EH FA PCA - Sex"
+                )
+
+#finaal graphs
+PCA_output_EHFA_AL
+PCA_output_EHFA_sex
+
+
+```
+
+```{r}
+#EH WS
+EH_WS <- read.csv("~/Documents/BBSP/Fall 2023/michelle paper /Data analysis/EH_WS.csv")
+
+dim(EH_WS)
+
+# Delete Cases with Missingness (remove missing va)
+EH_WS1 <- na.omit(EH_WS)
+summary(EH_WS1)
+
+#Exclude categorical data
+EH_WS2 <- EH_WS1[,-c(1:7)]
+
+EH_WS_pca <- prcomp(EH_WS2, 
+                     scale = TRUE)
+# Summary of Analysis 
+summary(EH_WS_pca)
+
+# Elements of PCA object 
+names(EH_WS_pca)
+
+# Std Dev of Components 
+EH_WS_pca$sdev
+
+# Eigenvectors - contains the loadings per componeent
+EH_WS_pca$rotation
+
+# Std Dev and Mean of Variables  - stdev od the originial variables 
+EH_WS_pca$center
+EH_WS_pca$scale
+
+# Principal Component Scores - 
+EH_WS_pca$x
+
+# Scree Plot of Variance 
+fviz_eig(EH_WS_pca, 
+         addlabels = TRUE,
+         ylim = c(0, 40))
+
+fviz_pca_biplot(EH_WS_pca)
+
+# Biplot with Labeled Variables
+fviz_pca_biplot(EH_WS_pca,
+                label="var")
+
+fviz_cos2(EH_WS_pca, choice = "var", axes = 1:2) ##  determine how much each variable is represented in a given component. A low value means that the variable is not perfectly represented by that component. A high value, on the other hand, means a good representation of the variable on that component.
+
+fviz_pca_var(EH_WS_pca, col.var = "cos2",
+            gradient.cols = c("black", "orange", "red"),
+            repel = TRUE)
+#suppresses the labels of the data points - to reduce crowding of the graph 
+
+
+### PCA Biplot outputs 
+
+AL_reorder_EHWS <-  factor(EH_WS1$AL_score_rank, levels = c("zero","low", "med", "high"))
+
+PCA_output_EHWS_AL <- fviz_pca_biplot(EH_WS_pca,
+                label="var",
+                habillage = AL_reorder_EHWS, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.50, title = "EH WS PCA - AL Load"
+                )
+
+PCA_output_EHWS_sex <- fviz_pca_biplot(EH_WS_pca,
+                label="var",
+                habillage = EH_WS1$Sex, 
+                col.var = "dark grey",
+                addEllipses=TRUE, ellipse.level=0.50, title = "EH WS PCA - Sex"
+                )
+
+#finaal graphs
+PCA_output_EHWS_AL
+PCA_output_EHWS_sex
+
+
+```
+
